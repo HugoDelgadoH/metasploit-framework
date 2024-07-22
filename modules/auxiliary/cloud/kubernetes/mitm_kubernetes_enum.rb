@@ -37,10 +37,10 @@ class MetasploitModule < Msf::Auxiliary
 
     register_options(
       [
-        Opt::RHOSTS('https://192.168.85.2:8443', false),
+        Opt::RHOSTS('https://192.168.49.2:8443', false),
         Opt::RPORT(nil, false),
         Msf::OptInt.new('SESSION', [false, 'An optional session to use for configuration']),
-        #OptRegexp.new('HIGHLIGHT_NAME_PATTERN', [true, 'PCRE regex of resource names to highlight', 'ClusterIP']),
+        OptRegexp.new('HIGHLIGHT_NAME_PATTERN', [true, 'PCRE regex of resource names to highlight', 'externalIPs|true']),
         OptEnum.new('OUTPUT', [true, 'output format to use', 'table', ['table', 'json']])
       ]
     )  
@@ -49,7 +49,7 @@ class MetasploitModule < Msf::Auxiliary
   def output_for(type)
     case type
     when 'table'
-      Msf::Exploit::Remote::HTTP::Kubernetes::Output::Table.new(self, highlight_name_pattern: datastore['HIGHLIGHT_NAME_PATTERN'])
+      Msf::Exploit::Remote::HTTP::Kubernetes::Output::Table.new(self, highlight_name_pattern: datastore['externalIPs|true'])
     when 'json'
       Msf::Exploit::Remote::HTTP::Kubernetes::Output::JSON.new(self)
     end
@@ -61,8 +61,11 @@ class MetasploitModule < Msf::Auxiliary
     @kubernetes_client = Msf::Exploit::Remote::HTTP::Kubernetes::Client.new({ http_client: self, token: api_token })
     @output = output_for(datastore['output'])
 
-    enum_services(datastore['NAMESPACE'], name: datastore['NAME'])
-  rescue Msf::Exploit::Remote::HTTP::Kubernetes::Error::ApiError => e
-    print_error(e.message)
+    begin
+      enum_all_services
+    rescue Msf::Exploit::Remote::HTTP::Kubernetes::Error::ApiError => e
+      print_error(e.message)
+    end
   end
 end
+
