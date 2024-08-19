@@ -37,10 +37,10 @@ class MetasploitModule < Msf::Auxiliary
 
     register_options(
       [
-        Opt::RHOSTS('https://192.168.49.2:8443', false),
+        Opt::RHOSTS(nil, false),
         Opt::RPORT(nil, false),
         Msf::OptInt.new('SESSION', [false, 'An optional session to use for configuration']),
-        OptRegexp.new('HIGHLIGHT_NAME_PATTERN', [true, 'PCRE regex of resource names to highlight', 'externalIPs|true']),
+        OptRegexp.new('HIGHLIGHT_NAME_PATTERN', [true, 'PCRE regex of resource names to highlight', 'externalIPs']),
         OptEnum.new('OUTPUT', [true, 'output format to use', 'table', ['table', 'json']])
       ]
     )  
@@ -49,7 +49,7 @@ class MetasploitModule < Msf::Auxiliary
   def output_for(type)
     case type
     when 'table'
-      Msf::Exploit::Remote::HTTP::Kubernetes::Output::Table.new(self, highlight_name_pattern: datastore['externalIPs|true'])
+      Msf::Exploit::Remote::HTTP::Kubernetes::Output::Table.new(self, highlight_name_pattern: datastore['externalIPs'])
     when 'json'
       Msf::Exploit::Remote::HTTP::Kubernetes::Output::JSON.new(self)
     end
